@@ -1,0 +1,39 @@
+name: Pragmaflow CI Template
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Pragmaflow CI
+    env:
+      SLACK_REPOSITORY: 'pragmaflowinc/slack-bot'
+      SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+      CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get Slack Bot
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.SLACK_REPOSITORY }}
+          path: "./slack-bot"
+          token: ${{ secrets.GITHUB_BOT_TOKEN }}
+
+      - name: Move Bot
+        run: "mv slack-bot/* -t ./"
+
+      - name: Send Slack Notification Begin
+        run: "bash notify_slack.sh -p start"
+
+      # ADD SPECIFIC CI STEPS HERE
+
+      - name: Send Slack Notification Success
+        run: "bash notify_slack.sh -p success"
+
+      - name: Send Slack Notification Failure
+        if: ${{ failure() }}
+        run: "bash notify_slack.sh -p failure"
